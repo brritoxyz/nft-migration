@@ -9,9 +9,34 @@ contract RumasTest is Test {
     using LibString for uint256;
 
     Rumas public immutable rumas;
+    address[] public initialTokenRecipients = [address(this)];
+    uint256[] public initialTokenIds = [uint256(1)];
 
     constructor() {
-        rumas = new Rumas(address(this));
+        rumas = new Rumas(
+            address(this),
+            initialTokenRecipients,
+            initialTokenIds
+        );
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                             tokenURI
+    //////////////////////////////////////////////////////////////*/
+
+    function testCannotTokenURIInvalidNFT() external {
+        uint256 id = type(uint256).max;
+
+        vm.expectRevert(Rumas.InvalidNFT.selector);
+
+        rumas.tokenURI(id);
+    }
+
+    function testTokenURI() external {
+        uint256 id = initialTokenIds[0];
+        string memory tokenURI = rumas.tokenURI(id);
+
+        assertEq(string.concat(rumas.baseTokenURI(), id.toString()), tokenURI);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -42,6 +67,13 @@ contract RumasTest is Test {
         rumas.setBaseTokenURI(baseTokenURI);
 
         assertEq(baseTokenURI, rumas.baseTokenURI());
+
+        uint256 id = initialTokenIds[0];
+
+        assertEq(
+            string.concat(baseTokenURI, id.toString()),
+            rumas.tokenURI(id)
+        );
     }
 
     function testSetBaseTokenURIFuzz(string calldata baseTokenURI) external {
@@ -55,5 +87,12 @@ contract RumasTest is Test {
         rumas.setBaseTokenURI(baseTokenURI);
 
         assertEq(baseTokenURI, rumas.baseTokenURI());
+
+        uint256 id = initialTokenIds[0];
+
+        assertEq(
+            string.concat(baseTokenURI, id.toString()),
+            rumas.tokenURI(id)
+        );
     }
 }

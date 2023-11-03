@@ -14,7 +14,23 @@ contract Rumas is Owned, ERC721("BRR Rumas", "RUMAS") {
 
     error InvalidNFT();
 
-    constructor(address _owner) Owned(_owner) {}
+    constructor(
+        address _owner,
+        address[] memory initialTokenRecipients,
+        uint256[] memory initialTokenIds
+    ) Owned(_owner) {
+        uint256 iterations = initialTokenRecipients.length;
+
+        // During contract creation, any number of NFTs may be created and assigned without emitting `Transfer`:
+        // https://eips.ethereum.org/EIPS/eip-721#specification.
+        for (uint256 i = 0; i < iterations; ++i) {
+            unchecked {
+                _balanceOf[initialTokenRecipients[i]]++;
+            }
+
+            _ownerOf[initialTokenIds[i]] = initialTokenRecipients[i];
+        }
+    }
 
     function tokenURI(uint256 id) public view override returns (string memory) {
         if (_ownerOf[id] == address(0)) revert InvalidNFT();

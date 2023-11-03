@@ -20,15 +20,21 @@ contract Rumas is Owned, ERC721("BRR Rumas", "RUMAS") {
         uint256[] memory initialTokenIds
     ) Owned(_owner) {
         uint256 iterations = initialTokenRecipients.length;
+        address recipient = address(0);
 
         // During contract creation, any number of NFTs may be created and assigned without emitting `Transfer`:
         // https://eips.ethereum.org/EIPS/eip-721#specification.
         for (uint256 i = 0; i < iterations; ++i) {
+            recipient = initialTokenRecipients[i];
+
+            // The added complexity for setting the balances once (vs. incrementing) isn't worth the gas savings
+            // since they are negligible on Base (i.e. need 1 additional loop and/or comparison logic to avoid
+            // redundant SSTOREs and a balances param which adds calldata costs).
             unchecked {
-                _balanceOf[initialTokenRecipients[i]]++;
+                ++_balanceOf[recipient];
             }
 
-            _ownerOf[initialTokenIds[i]] = initialTokenRecipients[i];
+            _ownerOf[initialTokenIds[i]] = recipient;
         }
     }
 
